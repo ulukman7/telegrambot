@@ -254,3 +254,4 @@ CREATE TABLE IF NOT EXISTS participants (
 #   winner = participants[winner_index]
 #   bot.send_message(chat_id, f"Winner: {winner.name} ({winner.phone})")
 bot.polling()
+
