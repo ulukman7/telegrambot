@@ -167,6 +167,7 @@ def delete_product_from_auction(message):
   bot.reply_to(message, "Продукт успешно удален")
 
   conn.close()
+
 # акция
 @bot.message_handler(commands=['create_auction'])
 def create_auction(message):
