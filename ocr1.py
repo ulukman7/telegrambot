@@ -1,14 +1,15 @@
-import requests
+import pytesseract
+from PIL import Image
 
-print("=== Python Receipt OCR Demo - Need help? Email support@asprise.com ===")
+# Chek rasmini ochamiz
+image = Image.open('receipt.jpg')
 
-receiptOcrEndpoint = 'https://ocr.asprise.com/api/v1/receipt' # Receipt OCR API endpoint
-imageFile = "receipt5.jpg" # // Modify this to use your own file if necessary
-r = requests.post(receiptOcrEndpoint, data = { \
-  'client_id': 'TEST',        # Use 'TEST' for testing purpose \
-  'recognizer': 'auto',       # can be 'US', 'CA', 'JP', 'SG' or 'auto' \
-  'ref_no': 'ocr_python_123', # optional caller provided ref code \
-  }, \
-  files = {"file": open(imageFile, "rb")})
+# OCR orqali matnga o'tkazamiz
+text = pytesseract.image_to_string(image)
 
-print(r.text) # result in JSON
+# Matndan sana va summani ajratib olamiz
+date = find_date(text)
+total = find_total(text)
+
+print(f"Sana: {date}")
+print(f"Jami summa: {total}")
