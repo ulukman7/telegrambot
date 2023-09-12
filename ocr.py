@@ -1,7 +1,7 @@
 import json
 import requests
 url = "https://ocr.asprise.com/api/v1/receipt"
-image = "receipt3.jpg"
+image = "receipt.jpeg"
 res = requests.post(url,
                     data = {
                         'api_key': 'TEST',
@@ -11,5 +11,13 @@ res = requests.post(url,
                     files = {
                         'file': open(image, 'rb')
                     })
-with open("response3.json", "w") as f:
+with open("response1.json", "w") as f:
     json.dump(json.loads(res.text), f)
+with open("response1.json", "r") as f:
+    data = json.load(f)
+print(data['receipts'][0].keys())
+
+items = data['receipts'][0]['items']
+# if "" in items:
+
+print(f'Your Purchase at {data["receipts"][0]["ocr_text"]}')

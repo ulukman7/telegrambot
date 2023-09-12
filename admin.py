@@ -10,18 +10,21 @@ bot = TeleBot("6582575861:AAHK19MQ8_PIkZjLIETzBizj3i0QS36eT7Q")
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    add_btn = types.KeyboardButton("➕ Добавить товар")
-    list_btn = types.KeyboardButton("📋 Список товара")
-    list_draw_btn = types.KeyboardButton("📋 Список по розыгрышу.")
-    start_btn = types.KeyboardButton("▶️ Начать розыгрыш")
-    markup.add(add_btn, list_btn, list_draw_btn, start_btn)
-    bot.send_message(message.chat.id, "Welcome to admin bot!")
+    list_btn = types.KeyboardButton("/list_products")
+    auction_product_btn = types.KeyboardButton("/selected_auction_product")
+    create_btn = types.KeyboardButton("/create_auction")
+    add_product_btn = types.KeyboardButton("/add_product")
+    delete_btn = types.KeyboardButton("/delete_product")
+    buttons = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    buttons.add(list_btn, auction_product_btn, create_btn,add_product_btn,delete_btn)
+    bot.send_message(message.chat.id, "Здравствуйте!", reply_markup=buttons)
+
 
 
 # Mahsulot qo'shish
 @bot.message_handler(commands=['add_product'])
 def add_product(message):
+   # Mahsulot qo'shish funktsiyasi
     bot.send_message(message.chat.id, "Enter product name:")
     bot.register_next_step_handler(message, add_product_name)
 
@@ -45,14 +48,33 @@ def add_product_name(message):
   conn.commit()
   conn.close()
 
-  # Xabarni jo'natish
+@bot.message_handler(commands=['/delete_product'])
+def dlt_product(message):
+   # Mahsulot qo'shish funktsiyasi
+    bot.send_message(message.chat.id, "Enter product name:")
+    bot.register_next_step_handler(message, delete_product_by_id)
+def delete_product_by_id(message):
+  conn = sqlite3.connect('database.db', check_same_thread=False)
+  cursor = conn.cursor()
+  cursor.execute("""
+  CREATE TABLE IF NOT EXISTS auction_products (
+    id INTEGER PRIMARY KEY,
+    name TEXT
+  )
+""")
+  product_id = message.text
+
+  cursor.execute("DELETE FROM products WHERE name=?", (product_id,))
+  conn.commit()
+  conn.close()
+  bot.send_message(message.chat.id, "Product deleted successfully")
 
 # Mahsulotlar ro'yxati
-@bot.message_handler(commands=['list_products'])
+@bot.message_handler(commands=['select_auction_product'])
 def get_products(message):
     conn = sqlite3.connect('database.db', check_same_thread=False)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM products")
+    cursor.execute("SELECT * FROM auction_products")
     products = cursor.fetchall()
 
     if len(products) == 0:
@@ -68,7 +90,7 @@ def get_products(message):
     conn.close()
 
 # Auktsion uchun mahsulot tanlash
-@bot.message_handler(commands=['select_auction_product'])
+@bot.message_handler(commands=['list_products'])
 def select_auction_product(message):
     # Avval mahsulotlar ro'yxatini ko'rsatamiz
 
@@ -87,25 +109,29 @@ def select_auction_product(message):
     auctions_keyboard.add(*auction_names)
 
     bot.send_message(message.chat.id, "Choose auction:", reply_markup=auctions_keyboard)
+selected_product = None
 @bot.message_handler(regexp='(\d+).')
 def add_delete_product(message):
-
+  global selected_product
+  selected_product = message
   product_id = message.text.split('.')[0]
 # Knopkalar
-  add_btn = types.KeyboardButton("➕ Добовить")
-  delete_btn = types.KeyboardButton("🗑 Удалить")
+  add_btn = types.KeyboardButton("/add_auction")
+  delete_btn = types.KeyboardButton("/dlt_product_of_auc")
+  dltprod_btn = types.KeyboardButton("/delete_product")
+  back = types.KeyboardButton("/start")
 
     # Knopkalar paneli
   buttons = types.ReplyKeyboardMarkup(resize_keyboard=True)
-  buttons.add(add_btn, delete_btn)
+  buttons.add(add_btn, delete_btn,dltprod_btn,back)
 
     # Knopkalarni jo'natish
   bot.send_message(message.chat.id, "выбирай", reply_markup=buttons)
 
 # Mahsulotni auktsionga qo'shish
-@bot.message_handler(text='➕ add')
+@bot.message_handler(commands=["add_auction"])
 def add_product_to_auction(message):
-  product_id = message.text.split(' ')[1]
+  product_id = selected_product.text.split('.')[0]
 
   conn = sqlite3.connect('database.db')
   cursor = conn.cursor()
@@ -128,9 +154,9 @@ def add_product_to_auction(message):
   conn.close()
 
 # Mahsulotni auktsiondan olib tashlash
-@bot.message_handler(commands=['delete_product_from_auction'])
+@bot.message_handler(commands=['dlt_product_of_auc'])
 def delete_product_from_auction(message):
-  product_id = message.text.split(' ')[1]
+  product_id = selected_product.text.split('.')[0]
 
   conn = sqlite3.connect('database.db')
   cursor = conn.cursor()
@@ -141,34 +167,6 @@ def delete_product_from_auction(message):
   bot.reply_to(message, "Продукт успешно удален")
 
   conn.close()
-
-# Knopkalar uchun handlerlar
-@bot.message_handler(text="➕ Добавить")
-def add(message):
-    product_id = message.text # bu yerga mahsulot ID si kiritiladi
-    add_product_to_auction(product_id)
-
-@bot.message_handler(text="🗑 Удалить")
-def delete(message):
-    product_id = message.text
-    delete_product_from_auction(product_id)
-
-@bot.message_handler(commands=['delete_product'])
-def delete_product_by_id(message):
-  conn = sqlite3.connect('database.db', check_same_thread=False)
-  cursor = conn.cursor()
-  cursor.execute("""
-  CREATE TABLE IF NOT EXISTS auction_products (
-    id INTEGER PRIMARY KEY,
-    product_id INTEGER
-  )
-""")
-  product_id = message.text
-
-  cursor.execute("DELETE FROM products WHERE id=?", (product_id,))
-  conn.commit()
-  conn.close()
-  bot.send_message(message.chat.id, "Product deleted successfully")
 # акция
 @bot.message_handler(commands=['create_auction'])
 def create_auction(message):
@@ -242,25 +240,25 @@ CREATE TABLE IF NOT EXISTS participants (
 
     # bot.register_next_step_handler(message, show_participants)
 
-def show_participants(message, auction_id):
-
-  # выборка участников по аукциону
-  cursor.execute("SELECT * FROM participants WHERE auction_id=?", (auction_id,))
-
-  # вывод данных
-  for participant in cursor.fetchall():
-    bot.send_message(chat_id, f"{participant[1]} {participant[2]} {participant[3]}")
-
-def select_winner(auction_id):
-
-  # получение списка участников
-  participants = get_participants(auction_id)
-
-  # рандомный выбор
-  winner = random.choice(participants)
-
-  # отправка сообщения
-  bot.send_message(chat_id, f"Победитель: {winner['name']} {winner['phone']}")
+# def show_participants(message, auction_id):
+#
+#   # выборка участников по аукциону
+#   cursor.execute("SELECT * FROM participants WHERE auction_id=?", (auction_id,))
+#
+#   # вывод данных
+#   for participant in cursor.fetchall():
+#     bot.send_message(chat_id, f"{participant[1]} {participant[2]} {participant[3]}")
+#
+# def select_winner(auction_id):
+#
+#   # получение списка участников
+#   participants = get_participants(auction_id)
+#
+#   # рандомный выбор
+#   winner = random.choice(participants)
+#
+#   # отправка сообщения
+#   bot.send_message(chat_id, f"Победитель: {winner['name']} {winner['phone']}")
 
 # G'olibni tanlash
 # @bot.message_handler(commands=['select_winner'])
