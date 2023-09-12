@@ -18,6 +18,5 @@ with open("response1.json", "r") as f:
 print(data['receipts'][0].keys())
 
 items = data['receipts'][0]['items']
-# if "" in items:
 
 print(f'Your Purchase at {data["receipts"][0]["ocr_text"]}')

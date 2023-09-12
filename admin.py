@@ -131,17 +131,17 @@ def add_delete_product(message):
 # Mahsulotni auktsionga qo'shish
 @bot.message_handler(commands=["add_auction"])
 def add_product_to_auction(message):
-  product_id = selected_product.text.split('.')[0]
-
+  product_id = selected_product.text.split('.')[1].strip()
+  print(product_id)
   conn = sqlite3.connect('database.db')
   cursor = conn.cursor()
   cursor.execute("""
   CREATE TABLE IF NOT EXISTS auction_products (
     id INTEGER PRIMARY KEY,
-    product_id INTEGER
+    product_id
   )
 """)
-  cursor.execute("SELECT * FROM products WHERE id=?", (product_id,))
+  cursor.execute("SELECT * FROM products WHERE name=?", (product_id,))
   product = cursor.fetchone()
 
   if product:
@@ -156,7 +156,7 @@ def add_product_to_auction(message):
 # Mahsulotni auktsiondan olib tashlash
 @bot.message_handler(commands=['dlt_product_of_auc'])
 def delete_product_from_auction(message):
-  product_id = selected_product.text.split('.')[0]
+  product_id = selected_product.text.split('.')[1].strip()
 
   conn = sqlite3.connect('database.db')
   cursor = conn.cursor()
