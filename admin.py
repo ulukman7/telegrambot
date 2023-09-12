@@ -145,8 +145,13 @@ def add_product_to_auction(message):
   product = cursor.fetchone()
 
   if product:
-    cursor.execute("INSERT INTO auction_products (product_id) VALUES (?)", (product_id,))
-    conn.commit()
+    cursor.execute("SELECT * FROM auction_products WHERE product_id=?", (product_id,))
+    exists = cursor.fetchone()
+    if exists:
+        bot.reply_to(message, "Этот товар уже есть")
+    else:
+        cursor.execute("INSERT INTO auction_products (product_id) VALUES (?)", (product_id,))
+        conn.commit()
     bot.reply_to(message, "Товар успешно добавлен")
   else:
     bot.reply_to(message, "Такой товар не найден")
