@@ -2,7 +2,7 @@ from pyzbar.pyzbar import decode
 from PIL import Image
 
 # Откройте изображение с QR-кодом
-image = Image.open('qr_1 (1).png')
+image = Image.open('receipt.jpeg')
 
 # Попробуйте прочитать QR-код
 try:

@@ -242,10 +242,25 @@ CREATE TABLE IF NOT EXISTS participants (
 
     # bot.register_next_step_handler(message, show_participants)
 
-# def show_participants(message):
-#     auction_name = message.text
-    # Tanlangan auktsion bo'yicha ishtirokchilar ro'yxatini ko'rsatish
-    # Har bir uchun ism, tel, chek raqami ko'rsatiladi
+def show_participants(message, auction_id):
+
+  # выборка участников по аукциону
+  cursor.execute("SELECT * FROM participants WHERE auction_id=?", (auction_id,))
+
+  # вывод данных
+  for participant in cursor.fetchall():
+    bot.send_message(chat_id, f"{participant[1]} {participant[2]} {participant[3]}")
+
+def select_winner(auction_id):
+
+  # получение списка участников
+  participants = get_participants(auction_id)
+
+  # рандомный выбор
+  winner = random.choice(participants)
+
+  # отправка сообщения
+  bot.send_message(chat_id, f"Победитель: {winner['name']} {winner['phone']}")
 
 # G'olibni tanlash
 # @bot.message_handler(commands=['select_winner'])

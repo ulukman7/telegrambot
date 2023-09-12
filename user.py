@@ -3,6 +3,9 @@ from telebot import types
 import sqlite3
 import re
 import uuid
+from pyzbar.pyzbar import decode
+from PIL import Image
+from io import BytesIO
 bot = telebot.TeleBot("6339660614:AAHOAnVWlNrIs8JLSn8cGc_TAzRMCAKMju4")
 
 cheks_button = types.InlineKeyboardButton(text="Cheklarim", callback_data="get_cheks")
@@ -57,13 +60,37 @@ def add_user(name, lastname, phone, chat_id):
   conn.commit()
   conn.close()
 
+# @bot.message_handler(content_types=['photo'])
+# def handle_photo(message):
+#   file_id = message.photo[-1].file_id
+#   img_id = str(uuid.uuid4())
+#   save_receipt(img_id, file_id, message.chat.id)
+#
+#   bot.send_message(message.chat.id, "✅ Чек успешно получен!")
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
+
   file_id = message.photo[-1].file_id
   img_id = str(uuid.uuid4())
-  save_receipt(img_id, file_id, message.chat.id)
 
-  bot.send_message(message.chat.id, "✅ Чек успешно получен!")
+  file_info = bot.get_file(file_id)
+  downloaded_file = bot.download_file(file_info.file_path)
+  img = Image.open(BytesIO(downloaded_file))
+
+
+  try:
+    decoded_objs = decode(img)
+    for obj in decoded_objs:
+      print(obj.data.decode('utf-8'))
+      if "tax.salyk.kg/tax-web-control/client/api/v1/" in obj.data.decode('utf-8'):
+
+        save_receipt(img_id, file_id, message.chat.id)
+
+        bot.send_message(message.chat.id, "✅ чек получено")
+        return
+
+  except:
+    bot.send_message(message.chat.id, "❌ чек отклонено")
 
 def save_receipt(img_id, file_id, chat_id):
 
