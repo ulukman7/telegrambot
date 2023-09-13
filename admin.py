@@ -15,8 +15,9 @@ def start(message):
     create_btn = types.KeyboardButton("/create_auction")
     add_product_btn = types.KeyboardButton("/add_product")
     delete_btn = types.KeyboardButton("/delete_product")
+    users_btn = types.KeyboardButton("/users_list")
     buttons = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    buttons.add(list_btn, auction_product_btn, create_btn,add_product_btn,delete_btn)
+    buttons.add(list_btn, auction_product_btn, create_btn,add_product_btn,delete_btn, users_btn)
     bot.send_message(message.chat.id, "Здравствуйте!", reply_markup=buttons)
 
 
@@ -167,6 +168,18 @@ def delete_product_from_auction(message):
 
   conn.close()
 
+@bot.message_handler(commands=['users_list'])
+def get_users(message):
+
+  conn = sqlite3.connect('database.db')
+  cursor = conn.cursor()
+  cursor.execute("SELECT * FROM users")
+
+  for user in cursor.fetchall():
+     bot.send_message(message.chat.id,
+                     f"ID: {user[0]} \nName: {user[1]} {user[2]} \nPhone: {user[3]}")
+
+  conn.close()
 
 @bot.message_handler(commands=['create_auction'])
 def create_auction(message):

@@ -53,7 +53,6 @@ def add_user(name, lastname, phone, chat_id):
   c.execute("SELECT * FROM users WHERE chat_id = ?", (chat_id,))
   data = c.fetchone()
   if data is None:
-    # Foydalanuvchi yo'q, qo'shamiz
     conn.execute('''CREATE TABLE IF NOT EXISTS users 
                (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                 name TEXT, 
@@ -61,7 +60,6 @@ def add_user(name, lastname, phone, chat_id):
     c.execute("INSERT INTO users VALUES (?, ?, ?, ?)",
               (name, lastname, phone, chat_id))
   else:
-    # Foydalanuvchi bor, xabardor qilamiz
     bot.send_message(chat_id, "Вы уже зарегистрированы")
 
   conn.commit()
@@ -73,20 +71,24 @@ def add_user(name, lastname, phone, chat_id):
 #   img_id = str(uuid.uuid4())
 #   save_receipt(img_id, file_id, message.chat.id)
 #
-#   bot.send_message(message.chat.id, "✅ Чек успешно получен!")
+#
+#   chek = types.KeyboardButton("/chek")
+#   buttons = types.ReplyKeyboardMarkup(resize_keyboard=True)
+#   buttons.add(chek)
+#   bot.send_message(message.chat.id, "✅ Чек успешно получен!", reply_markup=buttons)
 @bot.message_handler(content_types=['photo'])
 def handle_receipt(message):
 
   file_id = message.photo[-1].file_id
   file_path = bot.get_file(file_id).file_path
-  # Rasmni yuklab olamiz
+
   file_bytes = bot.download_file(file_path)
   # Rasmdagi matnni o'qish
   receipt_text = read_receipt(file_bytes)
 
-  # Kerakli qiymatlarni ajratib olamiz
+
   # date = parse_receipt(receipt_text)
-  print(receipt_text)
+  # print(receipt_text)
   # Tekshiradi
   # if valid_date(date) and valid_total(total):
   #    bot.send_message(message.chat.id, "Чек принят!")
@@ -109,29 +111,29 @@ def read_receipt(file_bytes):
   print(data)
   receipt = data["receipts"][0]
 
-  print("Chek ma'lumotlari:")
-  print("- malumot",receipt['ocr_text'])
-  print("- Sana:", receipt["date"])
-  print("- Vaqt:", receipt["time"])
-  print("- Xaridlar soni:", len(receipt["items"]))
+  print("Информация о чека:")
+  print("- ocr_text",receipt['ocr_text'])
+  print("- Дата:", receipt["date"])
+  print("- Время:", receipt["time"])
 
-  total_amount = 0
+  conn = sqlite3.connect('database.db')
+  cursor = conn.cursor()
+
+  cursor.execute("SELECT * FROM auction_products")
+  product = cursor.fetchone()
+  auction_names = ["%s. %s" % (a[1]) for a in product]
+  if auction_names in receipt["ocr_text"]:
+    print("yes")
+  else:
+    print("no")
   for item in receipt["items"]:
       print(f"- {item['description']} - {item['amount']}")
-      total_amount += float(item["amount"])
+  if "Макароны Султан перья" in receipt["ocr_text"]:
+    print("yes")
+  else:
+    print("no")
 
-  print(f"Jami summa: {total_amount}")
-# def parse_receipt(text):
-#
-#   # Sana uchun regex
-#   date_regex = r"(\d{2}\.\d{2}\.\d{4})"
-#   date = re.search(date_regex, text).group(1)
-#
-#   # Jami uchun regex
-#   total_regex = r"Итого\s+(\d+\s+\S+)"
-#   total = re.search(total_regex, text).group(1)
-#
-#   return date, total
+
 
 
 def save_receipt(img_id, file_id, chat_id):
