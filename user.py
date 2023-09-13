@@ -1,3 +1,9 @@
+import json
+
+import cv2
+import pytesseract
+import numpy as np
+import requests
 import telebot
 from telebot import types
 import sqlite3
@@ -68,29 +74,63 @@ def add_user(name, lastname, phone, chat_id):
 #
 #   bot.send_message(message.chat.id, "✅ Чек успешно получен!")
 @bot.message_handler(content_types=['photo'])
-def handle_photo(message):
+def handle_receipt(message):
 
   file_id = message.photo[-1].file_id
-  img_id = str(uuid.uuid4())
+  file_path = bot.get_file(file_id).file_path
+  # Rasmni yuklab olamiz
+  file_bytes = bot.download_file(file_path)
+  # Rasmdagi matnni o'qish
+  receipt_text = read_receipt(file_bytes)
 
-  file_info = bot.get_file(file_id)
-  downloaded_file = bot.download_file(file_info.file_path)
-  img = Image.open(BytesIO(downloaded_file))
+  # Kerakli qiymatlarni ajratib olamiz
+  # date = parse_receipt(receipt_text)
+  print(receipt_text)
+  # Tekshiradi
+  # if valid_date(date) and valid_total(total):
+  #    bot.send_message(message.chat.id, "Чек принят!")
+  #    save_to_db(message.chat.id, date, total)
+  # else:
+  #    bot.send_message(message.chat.id, "Неверные данные чека")
 
 
-  try:
-    decoded_objs = decode(img)
-    for obj in decoded_objs:
-      print(obj.data.decode('utf-8'))
-      if "tax.salyk.kg/tax-web-control/client/api/v1/" in obj.data.decode('utf-8'):
+def read_receipt(file_bytes):
+  url = "https://ocr.asprise.com/api/v1/receipt"
+  image = file_bytes
 
-        save_receipt(img_id, file_id, message.chat.id)
+  api_key = "TEST"
 
-        bot.send_message(message.chat.id, "✅ чек получено")
-        return
+  response = requests.post(url,
+                           data={"api_key": api_key},
+                           files={"file": open(image, "rb")})
 
-  except:
-    bot.send_message(message.chat.id, "❌ чек отклонено")
+  data = json.loads(response.text)
+  print(data)
+  receipt = data["receipts"][0]
+
+  print("Chek ma'lumotlari:")
+  print("- Sana:", receipt["date"])
+  print("- Vaqt:", receipt["time"])
+  print("- Xaridlar soni:", len(receipt["items"]))
+
+  total_amount = 0
+  for item in receipt["items"]:
+      print(f"- {item['description']} - {item['amount']}")
+      total_amount += float(item["amount"])
+
+  print(f"Jami summa: {total_amount}")
+# def parse_receipt(text):
+#
+#   # Sana uchun regex
+#   date_regex = r"(\d{2}\.\d{2}\.\d{4})"
+#   date = re.search(date_regex, text).group(1)
+#
+#   # Jami uchun regex
+#   total_regex = r"Итого\s+(\d+\s+\S+)"
+#   total = re.search(total_regex, text).group(1)
+#
+#   return date, total
+
 
 def save_receipt(img_id, file_id, chat_id):
 

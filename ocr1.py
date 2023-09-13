@@ -1,15 +1,10 @@
-import pytesseract
-from PIL import Image
+import easyocr
 
-# Chek rasmini ochamiz
-image = Image.open('receipt.jpg')
+reader = easyocr.Reader(['en'])  # 'en' til uchun
+result = reader.readtext('receipt.jpeg')
 
-# OCR orqali matnga o'tkazamiz
-text = pytesseract.image_to_string(image)
+for detection in result:
+    print(detection[1])
 
-# Matndan sana va summani ajratib olamiz
-date = find_date(text)
-total = find_total(text)
 
-print(f"Sana: {date}")
-print(f"Jami summa: {total}")
+
