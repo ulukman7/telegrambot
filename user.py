@@ -1,3 +1,4 @@
+import io
 import json
 
 import cv2
@@ -96,19 +97,20 @@ def handle_receipt(message):
 
 def read_receipt(file_bytes):
   url = "https://ocr.asprise.com/api/v1/receipt"
-  image = file_bytes
+  image = io.BytesIO(file_bytes)
 
   api_key = "TEST"
 
   response = requests.post(url,
                            data={"api_key": api_key},
-                           files={"file": open(image, "rb")})
+                           files={"file": image})
 
   data = json.loads(response.text)
   print(data)
   receipt = data["receipts"][0]
 
   print("Chek ma'lumotlari:")
+  print("- malumot",receipt['ocr_text'])
   print("- Sana:", receipt["date"])
   print("- Vaqt:", receipt["time"])
   print("- Xaridlar soni:", len(receipt["items"]))
