@@ -15,7 +15,7 @@ from PIL import Image
 from io import BytesIO
 bot = telebot.TeleBot("6339660614:AAHOAnVWlNrIs8JLSn8cGc_TAzRMCAKMju4")
 
-cheks_button = types.InlineKeyboardButton(text="Cheklarim", callback_data="get_cheks")
+cheks_button = types.InlineKeyboardButton(text="chek", callback_data="get_cheks")
 keyboard = types.InlineKeyboardMarkup()
 keyboard.add(cheks_button)
 
